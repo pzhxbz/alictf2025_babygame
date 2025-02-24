@@ -9,7 +9,7 @@ use crate::{world::camera::YSortChild, GameAssets};
 use super::{
     combiner::Combiner,
     socket::{AspectIcon, Socket},
-    Aspect,
+    Number,
 };
 
 pub const DEFAULT_ICON_POSITION: Vec2 = Vec2::new(0.0, 16.0);
@@ -17,23 +17,19 @@ pub const HIGHLIGHTED_ICON_POSITION: Vec2 = Vec2::new(0.0, 24.0);
 const DEHIGHLIGHTED_ICON_POSITION: Vec2 = Vec2::new(0.0, 8.0);
 const REPOSITION_TIME: f32 = 0.2;
 
-pub fn icon_texture(assets: &Res<GameAssets>, aspect: &Aspect) -> Handle<Image> {
+pub fn icon_texture(assets: &Res<GameAssets>, aspect: &Number) -> Handle<Image> {
     match aspect {
-        Aspect::Joy => assets.joy_icon.clone(),
-        Aspect::Sadness => assets.sadness_icon.clone(),
-        Aspect::Anger => assets.anger_icon.clone(),
-        Aspect::Fear => assets.fear_icon.clone(),
-        Aspect::Nostalgia => assets.nostalgia_icon.clone(),
-        Aspect::Motivation => assets.motivation_icon.clone(),
-        Aspect::Melancholy => assets.melancholy_icon.clone(),
-        Aspect::Hatred => assets.hatred_icon.clone(),
-        Aspect::Vengefulness => assets.vengefulness_icon.clone(),
-        Aspect::Elation => assets.elation_icon.clone(),
-        Aspect::Anticipation => assets.anticipation_icon.clone(),
-        Aspect::Envy => assets.envy_icon.clone(),
-        Aspect::Pride => assets.pride_icon.clone(),
-        Aspect::Forgiveness => assets.forgiveness_icon.clone(),
-        Aspect::NotImplemented => assets.transparent_icon.clone(),
+        Number::Zero => assets.number0.clone(),
+        Number::One => assets.number1.clone(),
+        Number::Two => assets.number2.clone(),
+        Number::Three => assets.number3.clone(),
+        Number::Four => assets.number4.clone(),
+        Number::Five => assets.number5.clone(),
+        Number::Six => assets.number6.clone(),
+        Number::Seven => assets.number7.clone(),
+        Number::Eight => assets.number8.clone(),
+        Number::Nine => assets.number9.clone(),
+        Number::Combine(_) => assets.combine.clone(),
     }
 }
 

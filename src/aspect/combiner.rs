@@ -1,10 +1,11 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use bevy::prelude::*;
 use bevy_tweening::{
     lens::{TransformPositionLens, TransformScaleLens},
     Animator, EaseFunction, Tracks, Tween,
 };
+use obfstr::obfstmt;
 
 use crate::{
     aspect::icon::{DEFAULT_ICON_POSITION, HIGHLIGHTED_ICON_POSITION},
@@ -16,7 +17,7 @@ use crate::{
 use super::{
     icon::icon_texture,
     socket::{CombinerIcon, Socket},
-    Aspect, AspectCombiner,
+    AspectCombiner, Number,
 };
 
 #[derive(Event)]
@@ -24,51 +25,37 @@ pub struct CombinedAspect;
 
 #[derive(Resource, Default, Debug)]
 pub struct Combiner {
-    pub left_aspect: Option<Aspect>,
-    pub right_aspect: Option<Aspect>,
-    pub current_combination: Option<Aspect>,
-    pub last_combined_aspect: Aspect,
+    pub left_aspect: Option<Number>,
+    pub right_aspect: Option<Number>,
+    pub current_combination: Option<Number>,
+    pub last_combined_aspect: Number,
     pub all_sockets_full: bool,
+    pub flag_vec: Vec<u8>,
+    pub flag_vec2: Vec<u32>,
+    pub flag_vec3: Vec<u32>,
+    pub time1: u64,
+    pub status: u32,
+    pub counter: Arc<parking_lot::Mutex<u32>>,
 }
 
-pub fn is_socket_combination_possible(combiner: &Res<Combiner>, socket: &Socket) -> bool {
-    let combiner_aspect = if socket.on_top {
-        match combiner.right_aspect {
-            Some(r) => r,
-            None => return true,
-        }
+pub fn is_socket_combination_possible(combiner: &Res<Combiner>, _socket: &Socket) -> bool {
+    // RELEASE NEED
+    if combiner.flag_vec.len() >= 20 {
+        false
     } else {
-        match combiner.left_aspect {
-            Some(r) => r,
-            None => return true,
-        }
-    };
-    aspect_combinations(&socket.aspect, &combiner_aspect) != Aspect::NotImplemented
+        true
+    }
+    // true
 }
 
-pub fn aspect_combinations(left_aspect: &Aspect, right_aspect: &Aspect) -> Aspect {
-    fn match_aspects(left_aspect: &Aspect, right_aspect: &Aspect) -> Aspect {
-        match (left_aspect, right_aspect) {
-            (Aspect::Joy, Aspect::Sadness) => Aspect::Nostalgia,
-            (Aspect::Joy, Aspect::Nostalgia) => Aspect::Motivation,
-            (Aspect::Sadness, Aspect::Nostalgia) => Aspect::Melancholy,
-            (Aspect::Anger, Aspect::Fear) => Aspect::Hatred,
-            (Aspect::Anger, Aspect::Hatred) => Aspect::Vengefulness,
-            (Aspect::Joy, Aspect::Motivation) => Aspect::Elation,
-            (Aspect::Hatred, Aspect::Motivation) => Aspect::Pride,
-            (Aspect::Nostalgia, Aspect::Motivation) => Aspect::Anticipation,
-            (Aspect::Anger, Aspect::Pride) => Aspect::Envy,
-            (Aspect::Anticipation, Aspect::Elation) => Aspect::Forgiveness,
-            _ => Aspect::NotImplemented,
-        }
+pub fn aspect_combinations(left_aspect: &Number, right_aspect: &Number) -> Number {
+    fn match_aspects(left_aspect: &Number, right_aspect: &Number) -> Number {
+        let left = left_aspect.to_int();
+        let right = right_aspect.to_int();
+        Number::Combine(left * 10 + right)
     }
 
-    let result_aspect = match_aspects(left_aspect, right_aspect);
-    if result_aspect != Aspect::NotImplemented {
-        result_aspect
-    } else {
-        match_aspects(right_aspect, left_aspect)
-    }
+    match_aspects(left_aspect, right_aspect)
 }
 
 fn select_aspects(
@@ -222,14 +209,65 @@ fn select_combined_aspect(
     ev_combined_aspect.send(CombinedAspect);
 }
 
-fn check_all_aspects_full(mut combiner: ResMut<Combiner>, q_sockets: Query<&Socket>) {
-    combiner.all_sockets_full = q_sockets
-        .iter()
-        .filter(|s| s.aspect == Aspect::NotImplemented)
-        .count()
-        == 0;
+fn check_all_aspects_full(mut combiner: ResMut<Combiner>, _q_sockets: Query<&Socket>) {
+    combiner.all_sockets_full = combiner.flag_vec.len() >= 64;
+    if combiner.all_sockets_full && combiner.flag_vec2.is_empty() {
+        let mut flag2 = vec![];
+        for i in 0..16 {
+            let t = u32::from_le_bytes([
+                combiner.flag_vec[i * 4],
+                combiner.flag_vec[i * 4 + 1],
+                combiner.flag_vec[i * 4 + 2],
+                combiner.flag_vec[i * 4 + 3],
+            ]);
+            flag2.push(t);
+        }
+
+        let k = vec![0xaf657662, 0xfc6f144b, 0x22ab2b6c, 0x367d2dcb];
+        encrypt_xx(&mut flag2, &k);
+        // println!("flag_last0 {:?}", flag2);
+        combiner.flag_vec2 = flag2;
+    }
+}
+#[inline(always)]
+fn mx(sum: u32, y: u32, z: u32, p: u32, e: u32, k: &Vec<u32>) -> u32 {
+    ((z >> 5 ^ y << 2).wrapping_add(y >> 3 ^ z << 4))
+        ^ ((sum ^ y).wrapping_add(k[(p & 3 ^ e) as usize] ^ z))
 }
 
+#[inline(always)]
+fn encrypt_xx(v: &mut Vec<u32>, k: &Vec<u32>) -> Vec<u32> {
+    const DELTA: u32 = 0x6bc6121d;
+
+    let length: u32 = v.len() as u32;
+    let n: u32 = length - 1;
+    let key: Vec<u32> = k.to_vec();
+    let mut e: u32 = 0;
+    let mut y: u32 = 0;
+    let mut z = v[n as usize];
+    let mut sum: u32 = 0;
+    let mut q: u32 = 6 + 52 / length;
+    while q > 0 {
+        obfstmt! {
+            sum = sum.wrapping_add(DELTA);
+            e = sum >> 2 & 3;
+        }
+        for p in 0..n {
+            obfstmt! {
+                y = v[(p as usize) + 1];
+                v[p as usize] = v[p as usize].wrapping_add(mx(sum, y, z, p as u32, e, &key));
+                z = v[p as usize];
+            }
+        }
+        obfstmt! {
+            y = v[0];
+            v[n as usize] = v[n as usize].wrapping_add(mx(sum, y, z, n, e, &key));
+            z = v[n as usize];
+            q = q - 1;
+        }
+    }
+    return v.clone();
+}
 pub struct AspectCombinerPlugin;
 
 impl Plugin for AspectCombinerPlugin {

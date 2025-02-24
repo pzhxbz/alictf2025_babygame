@@ -1,4 +1,7 @@
-{
+use obfstr::obfstr;
+pub fn get_level() -> String {
+    obfstr!(
+        r##"{
 	"__header__": {
 		"fileType": "LDtk Project JSON",
 		"app": "LDtk",
@@ -406,7 +409,7 @@
 			"__cHei": 16,
 			"identifier": "Big_atlas",
 			"uid": 1,
-			"relPath": "atlas.png",
+			"relPath": "map/atlas.png",
 			"embedAtlas": null,
 			"pxWid": 1536,
 			"pxHei": 512,
@@ -1138,9 +1141,9 @@
 									"id": "V_String",
 									"params": ["Nine"]
 								}] },
-								{ "__identifier": "on_top", "__type": "Bool", "__value": true, "__tile": null, "defUid": 12, "realEditorValues": [{
+								{ "__identifier": "on_top", "__type": "Bool", "__value": false, "__tile": null, "defUid": 12, "realEditorValues": [{
 									"id": "V_Bool",
-									"params": [ true ]
+									"params": [ false ]
 								}] }
 							],
 							"__worldX": 672,
@@ -1158,7 +1161,7 @@
 					"__pxTotalOffsetX": 0,
 					"__pxTotalOffsetY": 0,
 					"__tilesetDefUid": 1,
-					"__tilesetRelPath": "atlas.png",
+					"__tilesetRelPath": "map/atlas.png",
 					"iid": "f0327d00-25d0-11ef-821e-cfeb62ff7223",
 					"levelId": 0,
 					"layerDefUid": 2,
@@ -1697,4 +1700,7 @@
 	],
 	"worlds": [],
 	"dummyWorldIid": "d1b3c961-25d0-11ef-821e-31ea342951d8"
+}
+        "##
+    ).to_string()
 }

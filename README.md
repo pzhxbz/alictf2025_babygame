@@ -12,3 +12,6 @@ A video game made in the Bevy game engine for the [Pirate Software Game Jam 15](
 
 [License](https://github.com/PraxTube/tsumi/blob/master/LICENSE),
 applies to everything that doesn't already have a license.
+
+## build challenge
+see tools/release.sh

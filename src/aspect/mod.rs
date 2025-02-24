@@ -3,10 +3,11 @@ mod icon;
 mod name_text;
 mod socket;
 
-pub use combiner::{CombinedAspect, Combiner};
-pub use socket::Socket;
-
 use std::str::FromStr;
+
+pub use combiner::{CombinedAspect, Combiner};
+use obfstr::obfstr;
+pub use socket::Socket;
 
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
@@ -22,47 +23,77 @@ impl Plugin for AspectPlugin {
             icon::AspectIconPlugin,
             name_text::AspectNameTextPlugin,
         ))
-        .register_ldtk_entity::<AspectBundle>("AspectSocket")
-        .register_ldtk_entity::<CombinerBundle>("CombinerSocket");
+        .register_ldtk_entity::<AspectBundle>(obfstr!("AspectSocket"))
+        .register_ldtk_entity::<CombinerBundle>(obfstr!("CombinerSocket"));
     }
 }
 
 #[derive(Default, Reflect, Clone, PartialEq, EnumString, Display, Debug, Copy, EnumIter)]
-pub enum Aspect {
+pub enum Number {
     #[default]
-    NotImplemented,
-    Joy,
-    Sadness,
-    Anger,
-    Fear,
-    Nostalgia,
-    Motivation,
-    Melancholy,
-    Hatred,
-    Vengefulness,
-    Elation,
-    Anticipation,
-    Envy,
-    Pride,
-    Forgiveness,
+    Zero,
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    Combine(u32),
+}
+
+impl Number {
+    pub fn to_int(&self) -> u32 {
+        match self {
+            Number::Zero => 0,
+            Number::One => 1,
+            Number::Two => 2,
+            Number::Three => 3,
+            Number::Four => 4,
+            Number::Five => 5,
+            Number::Six => 6,
+            Number::Seven => 7,
+            Number::Eight => 8,
+            Number::Nine => 9,
+            Number::Combine(i) => *i,
+        }
+    }
+
+    pub fn to_str(&self) -> String {
+        match self {
+            Number::Zero => obfstr!("0").to_string(),
+            Number::One => obfstr!("1").to_string(),
+            Number::Two => obfstr!("2").to_string(),
+            Number::Three => obfstr!("3").to_string(),
+            Number::Four => obfstr!("4").to_string(),
+            Number::Five => obfstr!("5").to_string(),
+            Number::Six => obfstr!("6").to_string(),
+            Number::Seven => obfstr!("7").to_string(),
+            Number::Eight => obfstr!("8").to_string(),
+            Number::Nine => obfstr!("9").to_string(),
+            Number::Combine(i) => i.to_string(),
+        }
+    }
 }
 
 #[derive(Default, Component)]
 pub struct AspectSocketInitiater {
-    aspect: Aspect,
+    aspect: Number,
     on_top: bool,
 }
 
 impl AspectSocketInitiater {
     fn from_field(entity_instance: &EntityInstance) -> Self {
-        let aspect = match entity_instance.get_enum_field("aspect") {
-            Ok(r) => Aspect::from_str(r).unwrap_or_default(),
-            Err(_) => Aspect::default(),
+        let aspect = match entity_instance.get_enum_field(obfstr!("aspect")) {
+            Ok(r) => Number::from_str(r).unwrap_or_default(),
+            Err(_) => Number::default(),
         };
-        let on_top = match entity_instance.get_bool_field("on_top") {
+        let on_top = match entity_instance.get_bool_field(obfstr!("on_top")) {
             Ok(r) => r.to_owned(),
             Err(err) => {
-                error!("counld not find field, {}", err);
+                error!("{}{}", obfstr!("counld not find field, "), err);
                 false
             }
         };

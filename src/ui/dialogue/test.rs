@@ -8,11 +8,7 @@ use std::{
 use strum::IntoEnumIterator;
 
 use crate::{
-    aspect::Aspect,
-    npc::{
-        narrator::{evaluate_aspect, NarratorDialogue},
-        NpcDialogue,
-    },
+    npc::{narrator::NarratorDialogue, NpcDialogue},
     ui::dialogue::runner::{IMA_FINAL_DIALOGUE, IMA_FIRST_ENCOUNTER, IMA_FIRST_ENCOUNTER_SHORT},
 };
 
@@ -109,24 +105,6 @@ fn validate_commands() {
 }
 
 #[test]
-fn validate_node_title_aspect_matching() {
-    let mut titles = Vec::new();
-    for title in Aspect::iter() {
-        titles.push(title.to_string());
-    }
-    let mut titles_hashset = HashSet::new();
-
-    validate_lines(|line, _| {
-        if let Some(title) = line.strip_prefix("title: ") {
-            if titles.contains(&title.to_string()) {
-                titles_hashset.insert(title.to_string());
-            }
-        }
-    });
-    assert!(titles.len() == titles_hashset.len(), "Length mismatch, not all aspects have their own title in yarn files, total of {} aspects exist, but only {} of those have a title in yarn", titles.len(), titles_hashset.len());
-}
-
-#[test]
 fn validate_node_title_narrator_matching() {
     let mut titles = Vec::new();
     for title in NarratorDialogue::iter() {
@@ -191,17 +169,4 @@ fn validate_jump_node_exists() {
             );
         }
     });
-}
-
-#[test]
-fn validate_ending_evaluation() {
-    let mut sum = 0;
-    for aspect in Aspect::iter() {
-        sum += evaluate_aspect(aspect);
-    }
-    assert!(
-        sum == 0,
-        "Sum of aspect points should be 0 so it's most likely balanced, but it's: {}",
-        sum
-    );
 }

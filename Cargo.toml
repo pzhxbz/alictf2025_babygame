@@ -1,5 +1,5 @@
 [package]
-name = "tsumi"
+name = "alictf"
 version = "0.1.1"
 edition = "2021"
 
@@ -11,29 +11,41 @@ opt-level = 1
 opt-level = 3
 
 # https://github.com/rust-lang/cargo/issues/4897
-[profile.wasm]
-inherits = "release"
+[profile.release]
 panic = "abort"
 opt-level = 'z'
 lto = true
 codegen-units = 1
+#strip = true      # Automatically strip symbols from the binary
+rpath = true      # Remove some absolute path
+debug = 1
+split-debuginfo = "off"
 
 [dependencies]
 rand = "0.8.5"
 rand_xoshiro = "0.6.0"
-chrono = "0.4.38"
-unicode-segmentation = "1.11.0"
+chrono = "0.4.39"
+unicode-segmentation = "1.12.0"
 strum = "0.26.3"
 strum_macros = "0.26.4"
 
-bevy = "0.14.0"
+bevy = { version = "0.14.2", features = ["wayland"] }
 bevy_asset_loader = { version = "0.21.0", features = ["2d"] }
 bevy_rapier2d = "0.27.0"
 bevy_kira_audio = "0.20.0"
 
 bevy_yarnspinner = "0.3.1"
-bevy_ecs_ldtk = { git = "https://github.com/MScottMcBee/bevy_ecs_ldtk", branch = "0.14", features = ["atlas"] }
+bevy_ecs_ldtk = { git = "https://github.com/MScottMcBee/bevy_ecs_ldtk", branch = "0.14", features = [
+    "atlas",
+] }
 noisy_bevy = "0.7.0"
-bevy_tweening = { version = "0.11.0", features = ["bevy_ui"]}
+bevy_tweening = { version = "0.11.0", features = ["bevy_ui"] }
 bevy_particle_systems = "0.13.0"
 bevy_trickfilm = "0.7.0"
+
+obfstr = "0.4.4"
+tracing = "0.1.40"
+tracing-appender = "0.2.3"
+tracing-subscriber = { version = "0.3.18", features = ["time"] }
+pin-project = "1.1.3"
+parking_lot = "0.12.1"

@@ -1,18 +1,18 @@
-use bevy::prelude::*;
-use bevy_ecs_ldtk::GridCoords;
-use bevy_rapier2d::prelude::*;
-
 use crate::{
     player::{Player, PLAYER_PIVOT},
     world::camera::{YSort, YSortChild},
     GameAssets, GameState,
 };
+use bevy::prelude::*;
+use bevy_ecs_ldtk::GridCoords;
+use bevy_rapier2d::prelude::*;
+use obfstr::obfstr;
 
 use super::{
-    combiner::{aspect_combinations, is_socket_combination_possible, CombinedAspect, Combiner},
+    combiner::{aspect_combinations, is_socket_combination_possible, Combiner},
     icon::{icon_texture, DEFAULT_ICON_POSITION, HIGHLIGHTED_ICON_POSITION},
     name_text::AspectNameText,
-    Aspect, AspectCombiner, AspectCombinerInitiater, AspectSocketInitiater,
+    AspectCombiner, AspectCombinerInitiater, AspectSocketInitiater, Number,
 };
 
 const PLAYER_HIGHLIGHT_DISTANCE: f32 = 32.0;
@@ -25,7 +25,7 @@ const TEXT_SCALE: Vec3 = Vec3::splat(0.1);
 pub struct AspectIcon;
 #[derive(Component)]
 pub struct Socket {
-    pub aspect: Aspect,
+    pub aspect: Number,
     pub on_top: bool,
 }
 #[derive(Component)]
@@ -175,7 +175,7 @@ fn spawn_combiner_socket(
                 CombinerIcon,
                 YSortChild(HIGHLIGHTED_ICON_POSITION.y + 1.0),
                 SpriteBundle {
-                    texture: icon_texture(&assets, &Aspect::NotImplemented),
+                    texture: icon_texture(&assets, &Number::Zero),
                     transform: Transform::from_translation(DEFAULT_ICON_POSITION.extend(0.0))
                         .with_scale(Vec3::splat(0.0)),
                     ..default()
@@ -186,13 +186,13 @@ fn spawn_combiner_socket(
         let fg_text = spawn_fg_text(
             &mut commands,
             &assets,
-            "SHOULD NEVER HAPPEN",
+            obfstr!("SHOULD NEVER HAPPEN"),
             COMBINED_ASPECT_TEXT_OFFSET,
         );
         let bg_text = spawn_bg_text(
             &mut commands,
             &assets,
-            "SHOULD NEVER HAPPEN",
+            obfstr!("SHOULD NEVER HAPPEN"),
             COMBINED_ASPECT_TEXT_OFFSET,
         );
         commands.entity(bg_text).insert(CombinerText);
@@ -230,9 +230,9 @@ fn highlight_sockets(
     };
 
     for (transform, mut atlas, socket) in &mut q_sockets {
-        if socket.aspect == Aspect::NotImplemented {
-            continue;
-        }
+        // if socket.aspect == Aspect::NotImplemented {
+        //     continue;
+        // }
 
         let index = if is_socket_combination_possible(&combiner, socket)
             && transform
@@ -253,7 +253,7 @@ fn highlight_combiner(
     combiner: Res<Combiner>,
     q_player: Query<&Transform, With<Player>>,
     mut q_combiner: Query<(&Transform, &mut TextureAtlas), (With<AspectCombiner>, Without<Player>)>,
-    q_sockets: Query<&Socket>,
+    _q_sockets: Query<&Socket>,
 ) {
     let player_transform = match q_player.get_single() {
         Ok(r) => r,
@@ -272,16 +272,16 @@ fn highlight_combiner(
             return;
         };
 
-    let combined_aspect = aspect_combinations(&left_aspect, &right_aspect);
-    let mut aspect_already_exists = false;
-    for socket in &q_sockets {
-        // The combined aspect was already combined and exists on of of the sockets
-        // Prevent a second combination
-        if socket.aspect == combined_aspect {
-            aspect_already_exists = true;
-            break;
-        }
-    }
+    let _combined_aspect = aspect_combinations(&left_aspect, &right_aspect);
+    let aspect_already_exists = false;
+    // for socket in &q_sockets {
+    //     // The combined aspect was already combined and exists on of of the sockets
+    //     // Prevent a second combination
+    //     if socket.aspect == combined_aspect {
+    //         aspect_already_exists = true;
+    //         break;
+    //     }
+    // }
 
     let index = if !aspect_already_exists
         && transform
@@ -297,6 +297,7 @@ fn highlight_combiner(
     atlas.index = index;
 }
 
+#[allow(dead_code)]
 fn set_visuals_for_socket(
     assets: &Res<GameAssets>,
     combiner: &Res<Combiner>,
@@ -307,7 +308,9 @@ fn set_visuals_for_socket(
 ) {
     if let Some((children, _, mut socket)) = q_sockets
         .iter_mut()
-        .filter(|(_, _, socket)| socket.aspect == Aspect::NotImplemented && socket.on_top == on_top)
+        .filter(
+            |(_, _, socket)| socket.on_top == on_top, // socket.aspect == Aspect::NotImplemented &&
+        )
         .min_by(|(_, x_transform, _), (_, y_transform, _)| {
             x_transform
                 .translation
@@ -326,6 +329,7 @@ fn set_visuals_for_socket(
     }
 }
 
+#[allow(dead_code)]
 fn push_combined_aspect(
     assets: Res<GameAssets>,
     combiner: Res<Combiner>,
@@ -362,7 +366,7 @@ impl Plugin for AspectSocketPlugin {
                 spawn_combiner_socket,
                 highlight_sockets,
                 highlight_combiner,
-                push_combined_aspect.run_if(on_event::<CombinedAspect>()),
+                // push_combined_aspect.run_if(on_event::<CombinedAspect>()),
             )
                 .run_if(in_state(GameState::Gaming)),
         );
